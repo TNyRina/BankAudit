@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} client{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fa fa-user-pen me-2 text-primary"></i>{{ action }} un client</h2>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><h6><i class="fa fa-id-card me-2"></i>Formulaire client</h6></div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">N° Compte</label>
+            <input type="text" name="n_compte" class="form-control"
+                   value="{{ client.n_compte if client else '' }}"
+                   {% if client %}readonly{% endif %} required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nom du client</label>
+            <input type="text" name="nomclient" class="form-control"
+                   value="{{ client.nomclient if client else '' }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Solde initial (Ar)</label>
+            <input type="number" name="solde" step="0.01" class="form-control"
+                   value="{{ client.solde if client else '0' }}" required>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="fa fa-save me-2"></i>{{ action }}
+            </button>
+            <a href="{{ url_for('bp_client.clients') }}" class="btn btn-outline-secondary">Annuler</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

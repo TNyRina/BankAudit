@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BankAudit — {% block title %}{% endblock %}</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0a1628;
+      --blue: #1a3a6b;
+      --accent: #2563eb;
+      --gold: #f59e0b;
+      --light: #f0f4ff;
+      --text: #1e293b;
+    }
+    body { background: #f0f4ff; font-family: 'Segoe UI', sans-serif; color: var(--text); }
+    .sidebar {
+      width: 240px; min-height: 100vh;
+      background: linear-gradient(180deg, var(--navy) 0%, var(--blue) 100%);
+      position: fixed; top:0; left:0; z-index:100; display:flex; flex-direction:column;
+    }
+    .sidebar-brand {
+      padding: 1.5rem 1.2rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-brand h5 { color: var(--gold); font-weight:700; margin:0; letter-spacing:1px; }
+    .sidebar-brand small { color: rgba(255,255,255,0.5); font-size:0.7rem; }
+    .nav-link-side {
+      display:flex; align-items:center; gap:10px;
+      padding: .7rem 1.2rem; color: rgba(255,255,255,0.7);
+      text-decoration: none; font-size:.9rem; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link-side:hover, .nav-link-side.active {
+      color: #fff; background: rgba(255,255,255,0.08);
+      border-left-color: var(--gold);
+    }
+    .nav-link-side i { width: 20px; text-align:center; }
+    .main-content { margin-left: 240px; padding: 2rem; min-height: 100vh; }
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h2 { font-weight:700; color: var(--navy); }
+    .card { border:none; border-radius:12px; box-shadow:0 2px 12px rgba(10,22,40,.08); }
+    .card-header { background: var(--navy); color:#fff; border-radius:12px 12px 0 0 !important; padding:.9rem 1.2rem; }
+    .card-header h6 { margin:0; font-weight:600; letter-spacing:.5px; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); }
+    .btn-primary:hover { background: #1d4ed8; }
+    .badge-insert { background:#dcfce7; color:#15803d; }
+    .badge-update { background:#fef9c3; color:#854d0e; }
+    .badge-delete { background:#fee2e2; color:#991b1b; }
+    .stat-card { border-radius:12px; padding:1.2rem; color:#fff; }
+    .stat-card.green { background: linear-gradient(135deg,#059669,#10b981); }
+    .stat-card.amber { background: linear-gradient(135deg,#d97706,#f59e0b); }
+    .stat-card.red   { background: linear-gradient(135deg,#dc2626,#ef4444); }
+    .stat-card.blue  { background: linear-gradient(135deg,#1d4ed8,#3b82f6); }
+    .stat-card h3 { font-size:2rem; font-weight:800; margin:0; }
+    .stat-card p  { margin:0; opacity:.85; font-size:.85rem; }
+    table thead th { font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; color:#64748b; }
+    .alert { border-radius:10px; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <h5><i class="fa fa-landmark me-2"></i>BankAudit</h5>
+    <small>Gestion des virements</small>
+  </div>
+  <nav class="mt-3 flex-grow-1">
+    {% if session.role == 'user' %}
+        <a href="{{ url_for('bp_dashboard.index') }}" class="nav-link-side {% if request.endpoint=='index' %}active{% endif %}">
+        <i class="fa fa-gauge-high"></i> Tableau de bord
+        </a>
+        <a href="{{ url_for('bp_client.clients') }}" class="nav-link-side {% if 'client' in request.endpoint %}active{% endif %}">
+        <i class="fa fa-users"></i> Clients
+        </a>
+        <a href="{{ url_for('bp_virement.virements') }}" class="nav-link-side {% if 'virement' in request.endpoint %}active{% endif %}">
+        <i class="fa fa-right-left"></i> Virements
+        </a>
+    {% endif %}
+
+    {% if session.role == 'admin' %}
+        <a href="{{ url_for('bp_audit.audit') }}" class="nav-link-side {% if request.endpoint=='audit' %}active{% endif %}">
+        <i class="fa fa-shield-halved"></i> Audit
+        </a>
+    {% endif %}
+    
+  </nav>
+  <!-- User card + logout -->
+  {% if session.username %}
+  <div style="padding:.8rem 1rem; border-top:1px solid rgba(255,255,255,.07);">
+
+    <!-- Avatar + infos -->
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:.7rem;">
+      <div style="
+        width:36px; height:36px; border-radius:50%; flex-shrink:0;
+        background: linear-gradient(135deg,
+          {% if session.role == 'admin' %}#7c3aed, #a78bfa{% else %}#1d4ed8, #60a5fa{% endif %});
+        display:flex; align-items:center; justify-content:center;
+        font-size:.85rem; font-weight:700; color:#fff;">
+        {{ session.username[0]|upper }}
+      </div>
+      <div style="overflow:hidden;">
+        <div style="color:#fff; font-size:.82rem; font-weight:600;
+                    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          {{ session.username }}
+        </div>
+        <div style="display:flex; align-items:center; gap:5px; margin-top:2px;">
+          {% if session.role == 'admin' %}
+            <span style="font-size:.65rem; background:rgba(124,58,237,.35);
+                         color:#c4b5fd; padding:1px 7px; border-radius:20px; font-weight:600;">
+              👑 ADMIN
+            </span>
+          {% else %}
+            <span style="font-size:.65rem; background:rgba(37,99,235,.35);
+                         color:#93c5fd; padding:1px 7px; border-radius:20px; font-weight:600;">
+              👤 USER
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Logout button -->
+    <a href="{{ url_for('bp_auth.logout') }}" style="
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      padding:.55rem; border-radius:8px; text-decoration:none;
+      background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.2);
+      color:#fca5a5; font-size:.82rem; font-weight:500;
+      transition:all .2s;"
+      onmouseover="this.style.background='rgba(239,68,68,.25)'; this.style.color='#fff';"
+      onmouseout="this.style.background='rgba(239,68,68,.1)'; this.style.color='#fca5a5';">
+      <i class="fa fa-right-from-bracket"></i> Se déconnecter
+    </a>
+
+  </div>
+  {% endif %}
+
+  <div style="padding:.5rem 1rem; color:rgba(255,255,255,0.15); font-size:.68rem;">
+    Sujet 22 — Triggers SQL
+  </div>
+</div>
+
+<div class="main-content">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
+        {{ msg }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

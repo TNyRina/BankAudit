@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Clients{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h2><i class="fa fa-users me-2 text-primary"></i>Clients</h2>
+    <p class="text-muted mb-0">Gérer les comptes clients</p>
+  </div>
+  <a href="{{ url_for('bp_client.add_client') }}" class="btn btn-primary">
+    <i class="fa fa-plus me-2"></i>Nouveau client
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-header"><h6><i class="fa fa-table me-2"></i>Table CLIENT</h6></div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>N° Compte</th><th>Nom du client</th><th class="text-end">Solde (Ar)</th><th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in clients %}
+        <tr>
+          <td><span class="badge bg-secondary">{{ c.n_compte }}</span></td>
+          <td>{{ c.nomclient }}</td>
+          <td class="text-end fw-bold {% if c.solde >= 0 %}text-success{% else %}text-danger{% endif %}">
+            {{ "%.2f"|format(c.solde) }}
+          </td>
+          <td class="text-center">
+            <a href="{{ url_for('bp_client.edit_client', n_compte=c.n_compte) }}" class="btn btn-sm btn-outline-warning me-1" title="Modifier">
+              <i class="fa fa-pen"></i>
+            </a>
+            <form method="post" action="{{ url_for('bp_client.delete_client', n_compte=c.n_compte) }}" style="display:inline"
+                  onsubmit="return confirm('Supprimer ce client ?')">
+              <button class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

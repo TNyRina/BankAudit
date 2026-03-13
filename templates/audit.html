@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Audit{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="fa fa-shield-halved me-2 text-primary"></i>Journal d'audit</h2>
+  <p class="text-muted">Toutes les opérations INSERT / UPDATE / DELETE sur la table Virement</p>
+</div>
+
+<!-- Statistiques -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card green">
+      <h3>{{ stats.nb_insert or 0 }}</h3>
+      <p><i class="fa fa-plus-circle me-1"></i>Insertions</p>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card amber">
+      <h3>{{ stats.nb_update or 0 }}</h3>
+      <p><i class="fa fa-pen-to-square me-1"></i>Modifications</p>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card red">
+      <h3>{{ stats.nb_delete or 0 }}</h3>
+      <p><i class="fa fa-trash me-1"></i>Suppressions</p>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card blue">
+      <h3>{{ audits | length }}</h3>
+      <p><i class="fa fa-list me-1"></i>Total opérations</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h6><i class="fa fa-table me-2"></i>Table AUDIT_VIREMENT</h6></div>
+  <div class="card-body p-0" style="overflow-x:auto">
+    <table class="table table-hover mb-0" style="font-size:.85rem">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Action</th>
+          <th>Date opération</th>
+          <th>N° Virement</th>
+          <th>N° Compte</th>
+          <th>Nom client</th>
+          <th>Date virement</th>
+          <th class="text-end">Mnt ancien</th>
+          <th class="text-end">Mnt nouveau</th>
+          <th>Utilisateur</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in audits %}
+        <tr>
+          <td>{{ a.id }}</td>
+          <td>
+            {% if a.type_action == 'ajout' %}
+              <span class="badge badge-insert px-2 py-1">
+                <i class="fa fa-plus me-1"></i>INSERT
+              </span>
+            {% elif a.type_action == 'modification' %}
+              <span class="badge badge-update px-2 py-1">
+                <i class="fa fa-pen me-1"></i>UPDATE
+              </span>
+            {% else %}
+              <span class="badge badge-delete px-2 py-1">
+                <i class="fa fa-trash me-1"></i>DELETE
+              </span>
+            {% endif %}
+          </td>
+          <td>{{ a.date_operation }}</td>
+          <td><span class="badge bg-primary">#{{ a.n_virement }}</span></td>
+          <td><code>{{ a.n_compte }}</code></td>
+          <td>{{ a.nomclient }}</td>
+          <td>{{ a.date_virement }}</td>
+          <td class="text-end">{{ "%.2f"|format(a.montant_ancien) if a.montant_ancien is not none else '—' }}</td>
+          <td class="text-end fw-bold">{{ "%.2f"|format(a.montant_nouv) if a.montant_nouv is not none else '—' }}</td>
+          <td><span class="badge bg-secondary">{{ a.utilisateur }}</span></td>
+        </tr>
+        {% endfor %}
+        {% if not audits %}
+        <tr><td colspan="10" class="text-center text-muted py-4">Aucune opération auditée pour le moment.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer statistiques -->
+  <div class="card-footer bg-light d-flex gap-4 flex-wrap" style="font-size:.85rem">
+    <div><strong>Total insertions :</strong>
+      <span class="badge badge-insert ms-1">{{ stats.nb_insert or 0 }}</span>
+    </div>
+    <div><strong>Total modifications :</strong>
+      <span class="badge badge-update ms-1">{{ stats.nb_update or 0 }}</span>
+    </div>
+    <div><strong>Total suppressions :</strong>
+      <span class="badge badge-delete ms-1">{{ stats.nb_delete or 0 }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-secondary mt-3">
+  <i class="fa fa-database me-2"></i>
+  <strong>Triggers SQLite actifs :</strong>
+  <code>trg_after_insert_virement</code> •
+  <code>trg_after_update_virement</code> •
+  <code>trg_after_delete_virement</code>
+</div>
+{% endblock %}
