@@ -43,8 +43,8 @@ def edit_virement(n_virement):
     if request.method == 'POST':
         montant = float(request.form['montant'])
         date_v = request.form['date_virement']
-        conn.execute('UPDATE virement SET montant=?, date_virement=? WHERE n_virement=?',
-                     (montant, date_v, n_virement))
+        conn.execute('UPDATE virement SET id_user=?, montant=?, date_virement=? WHERE n_virement=?',
+                     (session["id_user"], montant, date_v, n_virement))
         conn.commit()
         conn.close()
         flash('Virement modifié. Solde recalculé.', 'success')
@@ -53,12 +53,20 @@ def edit_virement(n_virement):
     conn.close()
     return render_template('virement_form.html', action='Modifier', virement=v, clients=clients)
 
+
 @bp_virement.route('/virements/delete/<int:n_virement>', methods=['POST'])
 @login_required
 def delete_virement(n_virement):
     conn = get_db()
-    conn.execute('DELETE FROM virement WHERE n_virement=?', (n_virement,))
+    
+    conn.execute(
+        'UPDATE virement SET id_user = ? WHERE n_virement = ?',
+        (session['id_user'], n_virement)
+    )
+    
+    conn.execute('DELETE FROM virement WHERE n_virement = ?', (n_virement,))
     conn.commit()
     conn.close()
+
     flash('Virement supprimé. Solde mis à jour.', 'warning')
     return redirect(url_for('bp_virement.virements'))
